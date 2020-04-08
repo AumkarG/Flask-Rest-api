@@ -43,21 +43,13 @@ def api_filter():
     query_parameters = request.args
 
     id = query_parameters.get('id')
-    query = "SELECT * FROM user WHERE"
-    to_filter = []
-
-    if id:
-        query += ' id=? AND'
-        to_filter.append(id)
-
-    query = query[:-4] + ';'
+    print(id)
+    query = "SELECT * FROM user WHERE id=" +id+";"
     conn = sqlite3.connect('users.db')
     cur = conn.cursor()
-    result = cur.execute(query, to_filter).fetchall()
+    result = cur.execute(query).fetchall()
     return jsonify(result)
 
-def pap():
-    print('yolo')
 
 
 
@@ -67,25 +59,27 @@ def create():
         fname = request.json['fname']
         lname = request.json['lname']
         email = request.json['email']
-        id=3
+        
         try:
-        #    sql = ''' INSERT INTO user(id,fname,lname,email)
-        #        VALUES(?,?,?,?); '''
-        #    conn = sqlite3.connect('users.db')
-        #    data_tuple = (id, fname,lname, email)
-        #    cur = conn.cursor()
-        #    cur.execute(sql, data_tuple)
-        #    pap()
-        #    return jsonify(request.json)
-            print(email)
             conn = sqlite3.connect('users.db')
             cur = conn.cursor()
-            cur.execute( "INSERT INTO user(id,fname,lname,email) VALUES(8,'RF','24F','EF2F');")
-            print("Heylo")
+            sql='SELECT * FROM user WHERE email = "'+email+'";'
+            print(sql)
+            email_match= cur.execute(sql).fetchall()
+            if(email_match):
+                return jsonify({'error':'email exists'})
+            num=cur.execute("select num from info").fetchall()
+            new_id=num[0][0]+1      
+            print(new_id)                                  #Generates new ID
+            sql="update info set num = "+str(new_id)+";"
+            cur = conn.cursor()
+            cur.execute(sql)
             conn.commit()
-            return jsonify(request.json)
+            cur.execute( "INSERT INTO user(id,fname,lname,email) VALUES(? ,? ,? ,?);",(new_id,fname,lname,email))
+            conn.commit()
+            return jsonify({"message" : "Updated Succesfully"})
         except Exception as e:
-            return e
+            return "Exception encountered"
 
         return page_not_found
 
