@@ -6,7 +6,6 @@ import sqlite3
 
 app = flask.Flask(__name__)
 api=Api(app)
-app.config["DEBUG"] = True
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -33,9 +32,7 @@ class byid(Resource):
         query = query[:-4] + ';'
         conn = sqlite3.connect('users.db')
         cur = conn.cursor()
-
         results = cur.execute(query, to_filter).fetchall()
-
         return jsonify(results)
 
 @app.route('/userbyid', methods=['GET'])
@@ -48,6 +45,8 @@ def api_filter():
     conn = sqlite3.connect('users.db')
     cur = conn.cursor()
     result = cur.execute(query).fetchall()
+    if(len(result)==0):
+        return jsonify({"error":"ID NOT FOUND"})
     return jsonify(result)
 
 
@@ -77,10 +76,12 @@ def create():
             conn.commit()
             cur.execute( "INSERT INTO user(id,fname,lname,email) VALUES(? ,? ,? ,?);",(new_id,fname,lname,email))
             conn.commit()
-            return jsonify({"message" : "Updated Succesfully"})
+            query = "SELECT * FROM user WHERE id=" +str(new_id)+";"
+            result = cur.execute(query).fetchall()
+            return jsonify(result)
         except Exception as e:
+            print(e)
             return "Exception encountered"
-
         return page_not_found
 
 api.add_resource(byid, '/userbyid/<id>')
