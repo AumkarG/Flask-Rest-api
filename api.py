@@ -12,7 +12,7 @@ def page_not_found(e):
     return "<h1>404</h1><p>The User for the given id does not exist </p>", 404
 
 class all(Resource):
-    def get(self,id):
+    def get(self):
         conn = sqlite3.connect('users.db')
         cur = conn.cursor()
         all_users= cur.execute('SELECT * FROM user;').fetchall()
